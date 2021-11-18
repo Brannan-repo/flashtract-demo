@@ -18,6 +18,9 @@
 			<column name="USERNAME" type="VARCHAR(255)">
 				<constraints nullable="false" />
 			</column>
+			<column name="NAME" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
 		</createTable>
 
 		<addAutoIncrement columnDataType="int"

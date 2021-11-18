@@ -5,5 +5,10 @@
         xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    
+    <!-- Load tables -->
     <include file="/db/changelog/versions/contract-invoicing-changelog-1.0.xml"/>
+    
+    <!-- Load Initial Data -->
+    <include file="/db/changelog/initial-data/contract-invoicing-data-1.0.xml"/>
 </databaseChangeLog>
