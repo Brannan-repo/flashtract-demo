@@ -12,6 +12,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.springframework.lang.NonNull;
+
 @Entity
 @Table(name = "CONTRACT")
 public class ContractEntity {
@@ -24,9 +26,11 @@ public class ContractEntity {
 	@JoinColumn(name = "CONTRACT_ID")
 	private List<InvoiceEntity> invoices;
 
+	@NonNull
 	@Column(name = "DESCRIPTION", nullable = false)
 	private String description;
 
+	@NonNull
 	@Column(name = "TERMS", nullable = false)
 	private String terms;
 
@@ -37,8 +41,12 @@ public class ContractEntity {
 	private ZonedDateTime createdDt;
 
 	@OneToOne
-	@JoinColumn(name = "ID")
+	@JoinColumn(name = "CREATED_BY")
 	private UserEntity createdBy;
+
+	@OneToOne
+	@JoinColumn(name = "ASSIGNED_TO")
+	private UserEntity assignedTo;
 
 	public Integer getId() {
 		return id;
@@ -98,6 +106,14 @@ public class ContractEntity {
 
 	public void setCreatedBy(UserEntity createdBy) {
 		this.createdBy = createdBy;
+	}
+
+	public UserEntity getAssignedTo() {
+		return assignedTo;
+	}
+
+	public void setAssignedTo(UserEntity assignedTo) {
+		this.assignedTo = assignedTo;
 	}
 
 }

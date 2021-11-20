@@ -54,6 +54,7 @@
 			<column name="CREATED_BY" type="INT">
 				<constraints nullable="false" />
 			</column>
+			<column name="ASSIGNED_TO" type="INT" />
 		</createTable>
 
 		<addForeignKeyConstraint

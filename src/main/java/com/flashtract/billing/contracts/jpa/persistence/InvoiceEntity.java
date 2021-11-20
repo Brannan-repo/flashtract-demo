@@ -15,6 +15,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.springframework.lang.NonNull;
+
 import com.flashtract.billing.contracts.jpa.InvoiceStatus;
 
 @Entity
@@ -25,6 +27,7 @@ public class InvoiceEntity {
 	@Column(name = "ID", nullable = false, unique = true)
 	private Integer id;
 
+	@NonNull
 	@Column(name = "SUMMARY", nullable = false)
 	private String summary;
 

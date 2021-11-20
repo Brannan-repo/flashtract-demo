@@ -8,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.springframework.lang.NonNull;
+
 @Entity
 @Table(name = "MATERIAL")
 public class MaterialEntity {
@@ -17,14 +19,17 @@ public class MaterialEntity {
 	private Integer id;
 
 	@Basic
+	@NonNull
 	@Column(name = "NAME", nullable = false)
 	private String name;
 
 	@Basic
+	@NonNull
 	@Column(name = "QUANTITY", nullable = false)
 	private Integer quantity;
 
 	@Basic
+	@NonNull
 	@Column(name = "PRICE", nullable = false)
 	private BigDecimal price;
 
