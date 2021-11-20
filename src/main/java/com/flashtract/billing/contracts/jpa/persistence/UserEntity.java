@@ -12,7 +12,7 @@ public class UserEntity {
 
 	@Id
 	@Column(name = "ID", nullable = false, unique = true)
-	private Long id;
+	private Integer id;
 
 	@Basic
 	@Column(name = "TYPE", nullable = false)
@@ -26,11 +26,11 @@ public class UserEntity {
 	@Column(name = "NAME", nullable = false)
 	private String name;
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
