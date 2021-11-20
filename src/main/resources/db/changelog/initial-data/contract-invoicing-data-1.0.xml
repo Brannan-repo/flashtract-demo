@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+	<changeSet author="bnunnally" id="INITIAL-DATA-1.0">
+		<insert tableName="USER">
+			<column name="TYPE" value="CLIENT_USER" />
+			<column name="USERNAME" value="cuser1" />
+		</insert>
+		<insert tableName="USER">
+			<column name="TYPE" value="VENDOR_USER" />
+			<column name="USERNAME" value="rcitybolts" />
+			<column name="NAME" value="River City Bolts" />
+		</insert>
+		
+		<!-- Contract -->
+		<insert tableName="CONTRACT">
+			<column name="DESCRIPTION" value="Test contract description" />
+			<column name="TERMS" value="Test contract terms" />
+			<column name="TOTAL_AMOUNT" value="0" />
+			<column name="CREATED_BY" value="1" />
+		</insert>
+		
+		<!-- Invoice -->
+		<insert tableName="INVOICE">
+			<column name="CONTRACT_ID" value="1" />
+			<column name="SUMMARY" value="Test Invoice1 Summary" />
+			<column name="DESCRIPTION" value="Test Invoice1 Summary" />
+			<column name="LABOR_AMOUNT" value="100" />
+			<column name="STATUS" value="IN_PROGRESS" />
+			<column name="CREATED_BY" value="1" />
+			<column name="UPDATED_BY" value="2" />
+		</insert>
+		
+		<!-- Material -->
+		<insert tableName="MATERIAL">
+			<column name="INVOICE_ID" value="1" />
+			<column name="NAME" value="1" />
+			<column name="QUANTITY" value="1" />
+			<column name="PRICE" value="19.99" />
+		</insert>
+		
+		
+	</changeSet>
+
+</databaseChangeLog>

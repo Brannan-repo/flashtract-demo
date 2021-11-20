@@ -5,20 +5,150 @@
 	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
-	
-	<changeSet author="admin" id="1">
-		<createTable tableName="person">
-			<column autoIncrement="true" name="id" type="INT">
+
+	<changeSet author="bnunnally" id="1.0-USER">
+		<createTable tableName="USER">
+
+			<column autoIncrement="true" name="ID" type="INT">
 				<constraints primaryKey="true" />
 			</column>
-			<column name="name" type="VARCHAR(255)">
+			<column name="TYPE" type="VARCHAR(255)">
 				<constraints nullable="false" />
 			</column>
-			<column name="address" type="VARCHAR(255)" />
+			<column name="USERNAME" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="NAME" type="VARCHAR(255)" />
 		</createTable>
-		<rollback>
-			<dropTable tableName="person" />
-		</rollback>
+
+		<addAutoIncrement columnDataType="int"
+			columnName="ID" incrementBy="1" startWith="1" tableName="USER" />
+
+		<addUniqueConstraint columnNames="USERNAME"
+			tableName="USER" />
+		<addUniqueConstraint columnNames="NAME"
+			tableName="USER" />
+
 	</changeSet>
-	
+
+	<changeSet author="bnunnally" id="1.0-CONTRACT">
+		<createTable tableName="CONTRACT">
+
+			<column autoIncrement="true" name="ID" type="INT">
+				<constraints primaryKey="true" />
+			</column>
+			<column name="DESCRIPTION" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="TERMS" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="TOTAL_AMOUNT" type="NUMBER(15,2)"
+				defaultValue="0">
+				<constraints nullable="false" />
+			</column>
+			<column name="CREATED_DT" type="VARCHAR(255)"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+			<column name="CREATED_BY" type="INT">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+			constraintName="CONTRACT_USER_FK" baseColumnNames="CREATED_BY"
+			baseTableName="CONTRACT" referencedColumnNames="ID"
+			referencedTableName="USER" />
+
+		<addAutoIncrement columnDataType="int"
+			columnName="ID" incrementBy="1" startWith="1" tableName="CONTRACT" />
+
+	</changeSet>
+
+	<changeSet author="bnunnally" id="1.0-INVOICE">
+		<createTable tableName="INVOICE">
+
+			<column autoIncrement="true" name="ID" type="INT">
+				<constraints primaryKey="true" />
+			</column>
+			<column autoIncrement="true" name="CONTRACT_ID" type="INT">
+				<constraints nullable="false" />
+			</column>
+			<column name="SUMMARY" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="DESCRIPTION" type="VARCHAR(255)" />
+			<column name="TOTAL_AMOUNT" type="NUMBER(15,2)" defaultValue="0" />
+			<column name="LABOR_AMOUNT" type="NUMBER(15,2)" defaultValue="0" />
+			<column name="IS_PAID" type="BOOLEAN"
+				defaultValueBoolean="false">
+				<constraints nullable="false" />
+			</column>
+			<column name="STATUS" type="VARCHAR(255)"
+				defaultValue="SUBMITTED">
+				<constraints nullable="false" />
+			</column>
+			<column name="CREATED_DT" type="TIMESTAMP"
+				defaultValueComputed="NOW()">
+				<constraints nullable="false" />
+			</column>
+			<column name="UPDATED_DT" type="TIMESTAMP" />
+			<column name="CREATED_BY" type="int">
+				<constraints nullable="false" />
+			</column>
+			<column name="UPDATED_BY" type="INT" />
+
+		</createTable>
+
+		<addForeignKeyConstraint
+			constraintName="INVOICE_CONTRACT_FK" baseColumnNames="CONTRACT_ID"
+			baseTableName="INVOICE" referencedColumnNames="ID"
+			referencedTableName="CONTRACT" />
+
+		<addForeignKeyConstraint
+			constraintName="INVOICE_USER_CREATE_BY_FK"
+			baseColumnNames="CREATED_BY" baseTableName="INVOICE"
+			referencedColumnNames="ID" referencedTableName="USER" />
+
+		<addForeignKeyConstraint
+			constraintName="INVOICE_USER_UPDATED_BY_FK"
+			baseColumnNames="UPDATED_BY" baseTableName="INVOICE"
+			referencedColumnNames="ID" referencedTableName="USER" />
+
+		<addAutoIncrement columnDataType="int"
+			columnName="ID" incrementBy="1" startWith="1" tableName="INVOICE" />
+
+	</changeSet>
+
+	<changeSet author="bnunnally" id="1.0-MATERIAL">
+		<createTable tableName="MATERIAL">
+
+			<column autoIncrement="true" name="ID" type="INT">
+				<constraints primaryKey="true" />
+			</column>
+			<column name="INVOICE_ID" type="INT">
+				<constraints nullable="false" />
+			</column>
+			<column name="NAME" type="VARCHAR(255)">
+				<constraints nullable="false" />
+			</column>
+			<column name="QUANTITY" type="NUMBER(15,0)">
+				<constraints nullable="false" />
+			</column>
+			<column name="PRICE" type="DECIMAL(15,2)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint
+			constraintName="INVOICE_MATERIAL_ID_FK" baseColumnNames="INVOICE_ID"
+			baseTableName="MATERIAL" referencedColumnNames="ID"
+			referencedTableName="INVOICE" />
+
+		<addAutoIncrement columnDataType="int"
+			columnName="ID" incrementBy="1" startWith="1" tableName="MATERIAL" />
+
+	</changeSet>
+
 </databaseChangeLog>
