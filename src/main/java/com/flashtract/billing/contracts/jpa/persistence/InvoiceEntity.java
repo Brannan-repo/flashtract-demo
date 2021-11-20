@@ -7,11 +7,15 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.flashtract.billing.contracts.jpa.InvoiceStatus;
 
 @Entity
 @Table(name = "INVOICE")
@@ -36,8 +40,9 @@ public class InvoiceEntity {
 	@Column(name = "IS_PAID", nullable = false)
 	private Boolean isPaid;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false)
-	private String status;
+	private InvoiceStatus status;
 
 	@OneToOne
 	@JoinColumn(name = "ID")
@@ -106,11 +111,11 @@ public class InvoiceEntity {
 		this.isPaid = isPaid;
 	}
 
-	public String getStatus() {
+	public InvoiceStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(InvoiceStatus status) {
 		this.status = status;
 	}
 

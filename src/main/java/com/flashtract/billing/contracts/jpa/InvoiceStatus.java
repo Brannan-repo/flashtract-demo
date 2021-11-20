@@ -10,7 +10,8 @@ public enum InvoiceStatus {
 		this.status = status;
 	}
 
-	public String value() {
+	@Override
+	public String toString() {
 		return this.status;
 	}
 

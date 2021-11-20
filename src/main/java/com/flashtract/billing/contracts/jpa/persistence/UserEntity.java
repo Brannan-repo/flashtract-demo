@@ -3,8 +3,12 @@ package com.flashtract.billing.contracts.jpa.persistence;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import com.flashtract.billing.contracts.jpa.UserType;
 
 @Entity
 @Table(name = "USER")
@@ -14,9 +18,9 @@ public class UserEntity {
 	@Column(name = "ID", nullable = false, unique = true)
 	private Integer id;
 
-	@Basic
+	@Enumerated(EnumType.STRING)
 	@Column(name = "TYPE", nullable = false)
-	private String type;
+	private UserType type;
 
 	@Basic
 	@Column(name = "USERNAME", nullable = false)
@@ -34,11 +38,11 @@ public class UserEntity {
 		this.id = id;
 	}
 
-	public String getType() {
+	public UserType getType() {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(UserType type) {
 		this.type = type;
 	}
 

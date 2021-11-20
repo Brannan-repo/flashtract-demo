@@ -31,7 +31,7 @@
 			<column name="SUMMARY" value="Test Invoice1 Summary" />
 			<column name="DESCRIPTION" value="Test Invoice1 Summary" />
 			<column name="LABOR_AMOUNT" value="100" />
-			<column name="STATUS" value="In Progress" />
+			<column name="STATUS" value="IN_PROGRESS" />
 			<column name="CREATED_BY" value="1" />
 			<column name="UPDATED_BY" value="2" />
 		</insert>
