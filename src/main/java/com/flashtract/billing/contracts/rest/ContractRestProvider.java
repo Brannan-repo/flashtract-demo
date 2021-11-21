@@ -14,14 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.flashtract.billing.contracts.jpa.ContractRepository;
 import com.flashtract.billing.contracts.jpa.UserRepository;
 import com.flashtract.billing.contracts.jpa.UserType;
 import com.flashtract.billing.contracts.jpa.persistence.ContractEntity;
-import com.flashtract.billing.contracts.jpa.persistence.InvoiceEntity;
 import com.flashtract.billing.contracts.jpa.persistence.UserEntity;
 
 /**
@@ -38,27 +34,29 @@ public class ContractRestProvider {
 	@Autowired
 	private UserRepository userRepository;
 
-	@GetMapping(value = "/", produces = MediaType.APPLICATION_JSON_VALUE)
-	public String returnTest() {
-		return "Working";
-	}
+	/**
+	 * Return all Contracts assigned to a specific User.
+	 * 
+	 * @param userId
+	 * @return
+	 */
+	@GetMapping(value = "/list/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<ContractEntity>> returnAllContract(@PathVariable Integer userId) {
 
-	@SuppressWarnings("unused")
-	@GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-	public List<ContractEntity> returnAllContract() {
-		List<ContractEntity> allContracts = contractRepository.findAll();
-		ContractEntity ci = allContracts.get(0);
-		if (ci != null && ci.getInvoices() != null) {
-			InvoiceEntity i = ci.getInvoices().get(0);
-			System.out.println();
+		Optional<UserEntity> user = userRepository.findById(userId);
+		if (!user.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
-		return contractRepository.findAll();
+
+		return ResponseEntity.ok(contractRepository.findAllAssignedTo(userId));
 	}
 
 	/**
 	 * Assumes the user has an authenticated session. Just passing the user ID will check for the user type as a small validation.
 	 * 
-	 * @param contract
+	 * @param userId   The ID of the user requesting to create a Contract.
+	 * @param contract The ContractEntity containing Description, Terms, and the Assigned To user's ID.
+	 * @return ResposnEntity: 200 for a successful creation, otherwise the response will contain an error.
 	 */
 	@PostMapping(value = "/create/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> createContract(@PathVariable Integer userId, @RequestBody ContractEntity contract) {
@@ -73,18 +71,19 @@ public class ContractRestProvider {
 			}
 			contract.setCreatedBy(user.get());
 		} else {
-			return ResponseEntity.ok(String.format("User with ID {%s} not found.", userId));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
 		}
 
 		// Validate the AssignedTo field.
 		if (contract.getAssignedTo() == null || contract.getAssignedTo().getId() == null) {
-			return ResponseEntity.ok("Assigned To must be set when creating a Contract.");
+			return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED).body("Assigned To must be set when creating a Contract.");
 		}
 		Optional<UserEntity> assignedtoUser = userRepository.findById(contract.getAssignedTo().getId());
 		if (assignedtoUser.isPresent()) {
 			// Make sure they are trying to assign the Contract to a Vendor User
 			if (assignedtoUser.get().getType() != UserType.VENDOR_USER) {
-				return ResponseEntity.ok(String.format("Assigned To user with ID {%s} is not a Vendor User type. Only Vendor User's can be assigned to a contract.", contract.getAssignedTo().getId()));
+				return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
+						.body(String.format("Assigned To user with ID {%s} is not a Vendor User type. Only Vendor User's can be assigned to a contract.", contract.getAssignedTo().getId()));
 			}
 			contract.setAssignedTo(assignedtoUser.get());
 		} else {
@@ -92,7 +91,11 @@ public class ContractRestProvider {
 		}
 
 		ContractEntity saved = contractRepository.save(contract);
-		return ResponseEntity.ok("Successfully Created Contract.");
+		if (saved != null) {
+			return ResponseEntity.ok("Successfully Created Contract.");
+		} else {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("There was an error while creating the Contract");
+		}
 	}
 
 }
