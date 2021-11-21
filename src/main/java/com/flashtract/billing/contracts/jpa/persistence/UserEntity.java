@@ -30,6 +30,13 @@ public class UserEntity {
 	@Column(name = "NAME", nullable = false)
 	private String name;
 
+	public UserEntity() {
+	}
+
+	public UserEntity(Integer id) {
+		this.id = id;
+	}
+
 	public Integer getId() {
 		return id;
 	}

@@ -1,11 +1,15 @@
 package com.flashtract.billing.contracts.jpa.persistence;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
@@ -19,6 +23,7 @@ import org.springframework.lang.NonNull;
 public class ContractEntity {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", nullable = false, unique = true)
 	private Integer id;
 
@@ -34,11 +39,13 @@ public class ContractEntity {
 	@Column(name = "TERMS", nullable = false)
 	private String terms;
 
-	@Column(name = "TOTAL_AMOUNT", nullable = false)
-	private Long totalAmount;
+	@NonNull
+	@Column(name = "TOTAL_AMOUNT")
+	private BigDecimal totalAmount = BigDecimal.ZERO;
 
-	@Column(name = "CREATED_DT", nullable = false)
-	private ZonedDateTime createdDt;
+	@NonNull
+	@Column(name = "CREATED_DT")
+	private LocalDateTime createdDt = LocalDateTime.now();
 
 	@OneToOne
 	@JoinColumn(name = "CREATED_BY")
@@ -84,19 +91,19 @@ public class ContractEntity {
 		this.terms = terms;
 	}
 
-	public Long getTotalAmount() {
+	public BigDecimal getTotalAmount() {
 		return totalAmount;
 	}
 
-	public void setTotalAmount(Long totalAmount) {
+	public void setTotalAmount(BigDecimal totalAmount) {
 		this.totalAmount = totalAmount;
 	}
 
-	public ZonedDateTime getCreatedDt() {
+	public LocalDateTime getCreatedDt() {
 		return createdDt;
 	}
 
-	public void setCreatedDt(ZonedDateTime createdDt) {
+	public void setCreatedDt(LocalDateTime createdDt) {
 		this.createdDt = createdDt;
 	}
 
