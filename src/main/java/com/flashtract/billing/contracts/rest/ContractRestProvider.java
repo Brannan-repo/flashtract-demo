@@ -48,7 +48,28 @@ public class ContractRestProvider {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 		}
 
+		// Return all contracts by userId since there are only 2 user types right now.
+		// If the user type is Client User then they should be able to find all contracts.
+		// If the user type is Vendor User the it is assumed they are already authenticated and the
+		// system will submit this request with userId equal only to the authenticated Vendors ID.
+
 		return ResponseEntity.ok(contractRepository.findAllAssignedTo(userId));
+	}
+
+	@GetMapping(value = "/list/{userId}/{contractId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<ContractEntity> returnContractById(@PathVariable Integer userId, @PathVariable Integer contractId) {
+
+		Optional<UserEntity> user = userRepository.findById(userId);
+		if (!user.isPresent()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		}
+
+		// Return all contracts by userId since there are only 2 user types right now.
+		// If the user type is Client User then they should be able to find all contracts.
+		// If the user type is Vendor User the it is assumed they are already authenticated and the
+		// system will submit this request with userId equal only to the authenticated Vendors ID.
+
+		return ResponseEntity.ok(contractRepository.findByIdAndAssignedTo(contractId, userId));
 	}
 
 	/**
@@ -60,6 +81,14 @@ public class ContractRestProvider {
 	 */
 	@PostMapping(value = "/create/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> createContract(@PathVariable Integer userId, @RequestBody ContractEntity contract) {
+
+		// Simple validation to start
+		if (contract.getDescription() == null || contract.getDescription().isBlank()) {
+			return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body("Contract Description is required.");
+		}
+		if (contract.getTerms() == null || contract.getTerms().isBlank()) {
+			return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body("Contract Terms are required.");
+		}
 
 		// Handle 'authorizing' the user submitting the request.
 		// For this demo, the user has to pass in their own ID.
@@ -82,8 +111,8 @@ public class ContractRestProvider {
 		if (assignedtoUser.isPresent()) {
 			// Make sure they are trying to assign the Contract to a Vendor User
 			if (assignedtoUser.get().getType() != UserType.VENDOR_USER) {
-				return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED)
-						.body(String.format("Assigned To user with ID {%s} is not a Vendor User type. Only Vendor User's can be assigned to a contract.", contract.getAssignedTo().getId()));
+				return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(String.format(
+						"Assigned To user with ID {%s} is not a Vendor User type. Only Vendor User's can be assigned to a contract.", contract.getAssignedTo().getId()));
 			}
 			contract.setAssignedTo(assignedtoUser.get());
 		} else {
@@ -92,9 +121,9 @@ public class ContractRestProvider {
 
 		ContractEntity saved = contractRepository.save(contract);
 		if (saved != null) {
-			return ResponseEntity.ok("Successfully Created Contract.");
+			return ResponseEntity.ok("Successfully created Contract.");
 		} else {
-			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("There was an error while creating the Contract");
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("There was an error while creating the Contract.");
 		}
 	}
 

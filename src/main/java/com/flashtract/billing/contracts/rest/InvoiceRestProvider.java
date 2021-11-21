@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.flashtract.billing.contracts.jpa.ContractRepository;
 import com.flashtract.billing.contracts.jpa.InvoiceRepository;
+import com.flashtract.billing.contracts.jpa.InvoiceStatus;
 import com.flashtract.billing.contracts.jpa.UserRepository;
 import com.flashtract.billing.contracts.jpa.UserType;
 import com.flashtract.billing.contracts.jpa.persistence.ContractEntity;
@@ -39,8 +40,8 @@ public class InvoiceRestProvider {
 	@Autowired
 	private UserRepository userRepository;
 
-	@GetMapping(value = "/list/{contractId}/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<InvoiceEntity>> returnAllContractInvoices(@PathVariable Integer contractId, @PathVariable Integer userId) {
+	@GetMapping(value = "/list/{userId}/{contractId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<List<InvoiceEntity>> returnInvoicesForContract(@PathVariable Integer userId, @PathVariable Integer contractId) {
 
 		Optional<UserEntity> user = userRepository.findById(userId);
 		if (!user.isPresent()) {
@@ -50,14 +51,23 @@ public class InvoiceRestProvider {
 		return ResponseEntity.ok(invoiceRepository.findInvoicesByContractAndAssignedUser(contractId, userId));
 	}
 
-	@PostMapping(value = "/create/{contractId}/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> createInvoice(@PathVariable Integer contractId, @PathVariable Integer userId, @RequestBody InvoiceEntity invoice) {
+	/**
+	 * Creates an invoice if the user is a Vendor User type under a specified Contract. An error will be thrown if the contract is not assigned to the Vendor that is trying to create the Invoice.
+	 * 
+	 * @param contractId
+	 * @param userId
+	 * @param invoice
+	 * @return
+	 */
+	@PostMapping(value = "/create/{userId}/{contractId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> createInvoice(@PathVariable Integer userId, @PathVariable Integer contractId, @RequestBody InvoiceEntity invoice) {
 
 		Optional<UserEntity> user = userRepository.findById(userId);
 		if (user.isPresent()) {
 			if (user.get().getType() != UserType.VENDOR_USER) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Only Vendor Users are able to create Contracts.");
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Only Vendor Users are able to create Invoices.");
 			}
+			invoice.setCreatedBy(user.get());
 		} else {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
 		}
@@ -65,10 +75,48 @@ public class InvoiceRestProvider {
 		ContractEntity contract = contractRepository.findByIdAndAssignedTo(contractId, userId);
 		if (contract == null) {
 			// Could not find a contract for the information provided so stop the creation flow
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("Could not find a Contract with id {%s} and assigned to %s", contractId, user.get().getName()));
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(String.format("Could not find a Contract with id {%s} and assigned to %s", contractId, user.get().getName()));
 		}
 
-		return null;
+		invoice.setContractId(contract.getId());
+		invoice.setStatus(InvoiceStatus.APPROVED); // Auto-Approve the Invoice, pre-populated invoices are set to Submitted.
+
+		InvoiceEntity saved = invoiceRepository.save(invoice);
+		if (saved != null) {
+			return ResponseEntity.ok("Successfully created Invoice.");
+		} else {
+			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("There was an error while creating the Invoice.");
+		}
+	}
+
+	/**
+	 * "Submit" the invoice by changing it's status to Submitted.
+	 * 
+	 * @param userId
+	 * @param invoiceId
+	 * @return
+	 */
+	@GetMapping(value = "/submit/{userId}/{invoiceId}")
+	public ResponseEntity<String> submitInvoice(@PathVariable Integer userId, @PathVariable Integer invoiceId) {
+		Optional<UserEntity> user = userRepository.findById(userId);
+		if (user.isPresent()) {
+			if (user.get().getType() != UserType.VENDOR_USER) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Only Vendor Users can submit their invoices.");
+			}
+		} else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
+		}
+
+		InvoiceEntity invoice = invoiceRepository.findInvoiceByIdAndAssignedId(invoiceId, userId);
+		if (invoice == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(String.format("No Invoice found with ID {%s} and assigned to user wth ID {%s}", invoiceId, userId));
+		}
+
+		invoice.setStatus(InvoiceStatus.SUBMITTED);
+		invoiceRepository.save(invoice);
+
+		return ResponseEntity.ok("Successully submitted Invoice.");
 	}
 
 }

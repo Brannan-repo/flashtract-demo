@@ -15,6 +15,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.NonNull;
 
 @Entity
@@ -28,6 +29,7 @@ public class ContractEntity {
 
 	@OneToMany
 	@JoinColumn(name = "CONTRACT_ID")
+	@Lazy
 	private List<InvoiceEntity> invoices;
 
 	@NonNull

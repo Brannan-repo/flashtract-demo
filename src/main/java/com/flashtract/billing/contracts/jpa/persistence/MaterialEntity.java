@@ -5,8 +5,11 @@ import java.math.BigDecimal;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.springframework.lang.NonNull;
 
@@ -15,8 +18,15 @@ import org.springframework.lang.NonNull;
 public class MaterialEntity {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", nullable = false, unique = true)
 	private Integer id;
+
+	@Transient
+	private InvoiceEntity invoice;
+
+	@Column(name = "INVOICE_ID")
+	private int invoiceId;
 
 	@Basic
 	@NonNull
@@ -39,6 +49,22 @@ public class MaterialEntity {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public InvoiceEntity getInvoice() {
+		return invoice;
+	}
+
+	public void setInvoice(InvoiceEntity invoice) {
+		this.invoice = invoice;
+	}
+
+	public int getInvoiceId() {
+		return invoiceId;
+	}
+
+	public void setInvoiceId(int invoiceId) {
+		this.invoiceId = invoiceId;
 	}
 
 	public String getName() {
