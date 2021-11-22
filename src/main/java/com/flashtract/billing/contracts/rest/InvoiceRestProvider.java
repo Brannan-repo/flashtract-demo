@@ -1,6 +1,5 @@
 package com.flashtract.billing.contracts.rest;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,12 +39,14 @@ public class InvoiceRestProvider {
 	@Autowired
 	private UserRepository userRepository;
 
-	@GetMapping(value = "/list/{userId}/{contractId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<InvoiceEntity>> returnInvoicesForContract(@PathVariable Integer userId, @PathVariable Integer contractId) {
+	@Autowired
+	private BillingValidator validator;
 
-		Optional<UserEntity> user = userRepository.findById(userId);
-		if (!user.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+	@GetMapping(value = "/list/{userId}/{contractId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> returnInvoicesForContract(@PathVariable Integer userId, @PathVariable Integer contractId) {
+
+		if (!validator.validateUserById(userId)) {
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
 		return ResponseEntity.ok(invoiceRepository.findInvoicesByContractAndAssignedUser(contractId, userId));
@@ -60,7 +61,7 @@ public class InvoiceRestProvider {
 	 * @return
 	 */
 	@PostMapping(value = "/create/{userId}/{contractId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> createInvoice(@PathVariable Integer userId, @PathVariable Integer contractId, @RequestBody InvoiceEntity invoice) {
+	public ResponseEntity<?> createInvoice(@PathVariable Integer userId, @PathVariable Integer contractId, @RequestBody InvoiceEntity invoice) {
 
 		Optional<UserEntity> user = userRepository.findById(userId);
 		if (user.isPresent()) {
@@ -69,13 +70,13 @@ public class InvoiceRestProvider {
 			}
 			invoice.setCreatedBy(user.get());
 		} else {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
 		ContractEntity contract = contractRepository.findByIdAndAssignedTo(contractId, userId);
 		if (contract == null) {
 			// Could not find a contract for the information provided so stop the creation flow
-			return ResponseEntity.status(HttpStatus.NOT_FOUND)
+			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY)
 					.body(String.format("Could not find a Contract with id {%s} and assigned to %s", contractId, user.get().getName()));
 		}
 
@@ -98,14 +99,14 @@ public class InvoiceRestProvider {
 	 * @return
 	 */
 	@GetMapping(value = "/submit/{userId}/{invoiceId}")
-	public ResponseEntity<String> submitInvoice(@PathVariable Integer userId, @PathVariable Integer invoiceId) {
+	public ResponseEntity<?> submitInvoice(@PathVariable Integer userId, @PathVariable Integer invoiceId) {
 		Optional<UserEntity> user = userRepository.findById(userId);
 		if (user.isPresent()) {
 			if (user.get().getType() != UserType.VENDOR_USER) {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Only Vendor Users can submit their invoices.");
 			}
 		} else {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
 		InvoiceEntity invoice = invoiceRepository.findInvoiceByIdAndAssignedId(invoiceId, userId);

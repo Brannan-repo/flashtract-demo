@@ -1,6 +1,5 @@
 package com.flashtract.billing.contracts.rest;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,19 +43,21 @@ public class MaterialRestProvider {
 	@Autowired
 	private UserRepository userRepository;
 
-	@GetMapping(value = "/list/{userId}/{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<MaterialEntity>> returnInvoicesForContract(@PathVariable Integer userId, @PathVariable Integer invoiceId) {
+	@Autowired
+	private BillingValidator validator;
 
-		Optional<UserEntity> user = userRepository.findById(userId);
-		if (!user.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+	@GetMapping(value = "/list/{userId}/{invoiceId}", produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> returnInvoicesForContract(@PathVariable Integer userId, @PathVariable Integer invoiceId) {
+
+		if (!validator.validateUserById(userId)) {
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
 		return ResponseEntity.ok(materialRepository.findAllInvoiceMaterials(invoiceId));
 	}
 
 	@PostMapping(value = "/create/{userId}/{invoiceId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> createInvoice(@PathVariable Integer userId, @PathVariable Integer invoiceId, @RequestBody MaterialEntity material) {
+	public ResponseEntity<?> createInvoice(@PathVariable Integer userId, @PathVariable Integer invoiceId, @RequestBody MaterialEntity material) {
 
 		Optional<UserEntity> user = userRepository.findById(userId);
 		if (user.isPresent()) {
@@ -64,13 +65,13 @@ public class MaterialRestProvider {
 				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Only Vendor Users are able to add materials to invoices.");
 			}
 		} else {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
 		Optional<InvoiceEntity> invoice = invoiceRepository.findById(invoiceId);
 		if (!invoice.isPresent()) {
 			// Could not find a contract for the information provided so stop the creation flow
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("Could not find a Invoice with id {%s}.", invoiceId, user.get().getName()));
+			return ResponseEntity.status(HttpStatus.FAILED_DEPENDENCY).body(String.format("Could not find a Invoice with id {%s}.", invoiceId, user.get().getName()));
 		}
 
 		// Check if the user trying to add the material is assigned to the Contract.

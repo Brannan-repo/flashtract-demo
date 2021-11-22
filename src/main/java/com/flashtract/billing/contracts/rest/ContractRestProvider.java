@@ -1,6 +1,5 @@
 package com.flashtract.billing.contracts.rest;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +33,9 @@ public class ContractRestProvider {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private BillingValidator validator;
+
 	/**
 	 * Return all Contracts assigned to a specific User.
 	 * 
@@ -41,11 +43,10 @@ public class ContractRestProvider {
 	 * @return
 	 */
 	@GetMapping(value = "/list/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<List<ContractEntity>> returnAllContract(@PathVariable Integer userId) {
+	public ResponseEntity<?> returnAllContracts(@PathVariable Integer userId) {
 
-		Optional<UserEntity> user = userRepository.findById(userId);
-		if (!user.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		if (!validator.validateUserById(userId)) {
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
 		// Return all contracts by userId since there are only 2 user types right now.
@@ -56,20 +57,26 @@ public class ContractRestProvider {
 		return ResponseEntity.ok(contractRepository.findAllAssignedTo(userId));
 	}
 
+	/**
+	 * Return a single contract that is assigned to a user ID.
+	 * 
+	 * @param userId     The authenticated user.
+	 * @param contractId The ID of the contract that the user is assigned to.
+	 * @return
+	 */
 	@GetMapping(value = "/list/{userId}/{contractId}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<ContractEntity> returnContractById(@PathVariable Integer userId, @PathVariable Integer contractId) {
+	public ResponseEntity<?> returnContractById(@PathVariable Integer userId, @PathVariable Integer contractId) {
 
-		Optional<UserEntity> user = userRepository.findById(userId);
-		if (!user.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		if (!validator.validateUserById(userId)) {
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
-		// Return all contracts by userId since there are only 2 user types right now.
-		// If the user type is Client User then they should be able to find all contracts.
-		// If the user type is Vendor User the it is assumed they are already authenticated and the
-		// system will submit this request with userId equal only to the authenticated Vendors ID.
-
-		return ResponseEntity.ok(contractRepository.findByIdAndAssignedTo(contractId, userId));
+		// Let the Vendor User know that they aren't assigned to the contract.
+		ContractEntity contract = contractRepository.findByIdAndAssignedTo(contractId, userId);
+		if (contract == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(BillingValidator.contractByUserNotFound(userId, contractId));
+		}
+		return ResponseEntity.ok(contract);
 	}
 
 	/**
@@ -80,14 +87,12 @@ public class ContractRestProvider {
 	 * @return ResposnEntity: 200 for a successful creation, otherwise the response will contain an error.
 	 */
 	@PostMapping(value = "/create/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<String> createContract(@PathVariable Integer userId, @RequestBody ContractEntity contract) {
+	public ResponseEntity<?> createContract(@PathVariable Integer userId, @RequestBody ContractEntity contract) {
 
 		// Simple validation to start
-		if (contract.getDescription() == null || contract.getDescription().isBlank()) {
-			return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body("Contract Description is required.");
-		}
-		if (contract.getTerms() == null || contract.getTerms().isBlank()) {
-			return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body("Contract Terms are required.");
+		String errorMessage = validateIncomingContract(contract);
+		if (errorMessage != null) {
+			return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED).body(errorMessage);
 		}
 
 		// Handle 'authorizing' the user submitting the request.
@@ -100,13 +105,9 @@ public class ContractRestProvider {
 			}
 			contract.setCreatedBy(user.get());
 		} else {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("User with ID {%s} not found.", userId));
+			return BillingValidator.userNotFoundResponse(userId);
 		}
 
-		// Validate the AssignedTo field.
-		if (contract.getAssignedTo() == null || contract.getAssignedTo().getId() == null) {
-			return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED).body("Assigned To must be set when creating a Contract.");
-		}
 		Optional<UserEntity> assignedtoUser = userRepository.findById(contract.getAssignedTo().getId());
 		if (assignedtoUser.isPresent()) {
 			// Make sure they are trying to assign the Contract to a Vendor User
@@ -125,6 +126,19 @@ public class ContractRestProvider {
 		} else {
 			return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("There was an error while creating the Contract.");
 		}
+	}
+
+	private String validateIncomingContract(final ContractEntity contract) {
+		if (contract.getDescription() == null || contract.getDescription().isBlank()) {
+			return "Contract Description is required.";
+		}
+		if (contract.getTerms() == null || contract.getTerms().isBlank()) {
+			return "Contract Terms are required.";
+		}
+		if (contract.getAssignedTo() == null || contract.getAssignedTo().getId() == null) {
+			return "Assigned To must be set when creating a Contract.";
+		}
+		return null;
 	}
 
 }
