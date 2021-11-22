@@ -21,8 +21,9 @@
 		<insert tableName="CONTRACT">
 			<column name="DESCRIPTION" value="Test contract description" />
 			<column name="TERMS" value="Test contract terms" />
-			<column name="TOTAL_AMOUNT" value="0" />
+			<column name="TOTAL_AMOUNT" value="95.00" />
 			<column name="CREATED_BY" value="1" />
+			<column name="ASSIGNED_TO" value="2" />
 		</insert>
 		
 		<!-- Invoice -->
@@ -33,7 +34,14 @@
 			<column name="LABOR_AMOUNT" value="100" />
 			<column name="STATUS" value="IN_PROGRESS" />
 			<column name="CREATED_BY" value="1" />
-			<column name="UPDATED_BY" value="2" />
+		</insert>
+		<insert tableName="INVOICE">
+			<column name="CONTRACT_ID" value="1" />
+			<column name="SUMMARY" value="Test Invoice2 Summary" />
+			<column name="DESCRIPTION" value="Test Invoice2 Summary" />
+			<column name="LABOR_AMOUNT" value="200" />
+			<column name="STATUS" value="SUBMITTED" />
+			<column name="CREATED_BY" value="1" />
 		</insert>
 		
 		<!-- Material -->

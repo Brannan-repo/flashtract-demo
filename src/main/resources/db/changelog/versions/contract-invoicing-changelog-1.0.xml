@@ -54,6 +54,7 @@
 			<column name="CREATED_BY" type="INT">
 				<constraints nullable="false" />
 			</column>
+			<column name="ASSIGNED_TO" type="INT" />
 		</createTable>
 
 		<addForeignKeyConstraint
@@ -93,10 +94,10 @@
 				defaultValueComputed="NOW()">
 				<constraints nullable="false" />
 			</column>
-			<column name="UPDATED_DT" type="TIMESTAMP" />
 			<column name="CREATED_BY" type="int">
 				<constraints nullable="false" />
 			</column>
+			<column name="UPDATED_DT" type="TIMESTAMP" />
 			<column name="UPDATED_BY" type="INT" />
 
 		</createTable>

@@ -1,7 +1,7 @@
 package com.flashtract.billing.contracts.jpa.persistence;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +9,16 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.springframework.lang.NonNull;
 
 import com.flashtract.billing.contracts.jpa.InvoiceStatus;
 
@@ -22,9 +27,17 @@ import com.flashtract.billing.contracts.jpa.InvoiceStatus;
 public class InvoiceEntity {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID", nullable = false, unique = true)
 	private Integer id;
 
+	@Transient
+	private ContractEntity contract;
+
+	@Column(name = "CONTRACT_ID")
+	private int contractId;
+
+	@NonNull
 	@Column(name = "SUMMARY", nullable = false)
 	private String summary;
 
@@ -32,27 +45,27 @@ public class InvoiceEntity {
 	private String description;
 
 	@Column(name = "TOTAL_AMOUNT", nullable = false)
-	private BigDecimal totalAmount;
+	private BigDecimal totalAmount = BigDecimal.ZERO;
 
 	@Column(name = "LABOR_AMOUNT")
-	private BigDecimal laborAmount;
+	private BigDecimal laborAmount = BigDecimal.ZERO;
 
 	@Column(name = "IS_PAID", nullable = false)
-	private Boolean isPaid;
+	private boolean isPaid = false;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "STATUS", nullable = false)
-	private InvoiceStatus status;
+	private InvoiceStatus status = InvoiceStatus.SUBMITTED;
 
 	@OneToOne
-	@JoinColumn(name = "ID")
+	@JoinColumn(name = "CREATED_BY")
 	private UserEntity createdBy;
 
 	@Column(name = "CREATED_DT", nullable = false)
-	private ZonedDateTime createdDt;
+	private LocalDateTime createdDt = LocalDateTime.now();
 
 	@Column(name = "UPDATED_DT")
-	private ZonedDateTime updatedDt;
+	private LocalDateTime updatedDt;
 
 	@OneToOne
 	@JoinColumn(name = "UPDATED_BY")
@@ -68,6 +81,22 @@ public class InvoiceEntity {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public ContractEntity getContract() {
+		return contract;
+	}
+
+	public void setContract(ContractEntity contract) {
+		this.contract = contract;
+	}
+
+	public int getContractId() {
+		return contractId;
+	}
+
+	public void setContractId(int contractId) {
+		this.contractId = contractId;
 	}
 
 	public String getSummary() {
@@ -103,11 +132,11 @@ public class InvoiceEntity {
 		this.laborAmount = laborAmount;
 	}
 
-	public Boolean getIsPaid() {
+	public boolean getIsPaid() {
 		return isPaid;
 	}
 
-	public void setIsPaid(Boolean isPaid) {
+	public void setIsPaid(boolean isPaid) {
 		this.isPaid = isPaid;
 	}
 
@@ -119,19 +148,19 @@ public class InvoiceEntity {
 		this.status = status;
 	}
 
-	public ZonedDateTime getCreatedDt() {
+	public LocalDateTime getCreatedDt() {
 		return createdDt;
 	}
 
-	public void setCreatedDt(ZonedDateTime createdDt) {
+	public void setCreatedDt(LocalDateTime createdDt) {
 		this.createdDt = createdDt;
 	}
 
-	public ZonedDateTime getUpdatedDt() {
+	public LocalDateTime getUpdatedDt() {
 		return updatedDt;
 	}
 
-	public void setUpdatedDt(ZonedDateTime updatedDt) {
+	public void setUpdatedDt(LocalDateTime updatedDt) {
 		this.updatedDt = updatedDt;
 	}
 

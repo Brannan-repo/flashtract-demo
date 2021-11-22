@@ -2,7 +2,7 @@ package com.flashtract.billing.contracts.jpa;
 
 public enum InvoiceStatus {
 
-	IN_PROGRESS("In Progress"), SUBMITTED("Submitted"), APPROVED("Approved");
+	IN_PROGRESS("In Progress"), SUBMITTED("Submitted"), APPROVED("Approved"), DECLINED("Declined");
 
 	private String status;
 
