@@ -21,7 +21,7 @@
 		<insert tableName="CONTRACT">
 			<column name="DESCRIPTION" value="Test contract description" />
 			<column name="TERMS" value="Test contract terms" />
-			<column name="TOTAL_AMOUNT" value="0" />
+			<column name="TOTAL_AMOUNT" value="95.00" />
 			<column name="CREATED_BY" value="1" />
 			<column name="ASSIGNED_TO" value="2" />
 		</insert>

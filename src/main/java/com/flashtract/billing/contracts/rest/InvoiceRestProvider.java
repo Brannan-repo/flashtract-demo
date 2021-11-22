@@ -114,6 +114,19 @@ public class InvoiceRestProvider {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(String.format("No Invoice found with ID {%s} and assigned to user wth ID {%s}", invoiceId, userId));
 		}
 
+		// Check if the invoice is not in submitted status
+		if (invoice.getStatus() == InvoiceStatus.SUBMITTED) {
+			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(String.format("Invoice with ID {%s} has already been submitted.", invoice.getId()));
+		}
+
+		// Find the Contract and check the value
+		ContractEntity contract = contractRepository.findById(invoice.getContractId()).get();
+		invoice.setContract(contract);
+		if (invoice.getTotalAmount().compareTo(contract.getTotalAmount()) > 0) {
+			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(String.format(
+					"Cannot submit invoice since it's value of %s is greater than the contract's allowable total of %s", invoice.getTotalAmount(), contract.getTotalAmount()));
+		}
+
 		invoice.setStatus(InvoiceStatus.SUBMITTED);
 		invoiceRepository.save(invoice);
 
